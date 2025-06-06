@@ -1,0 +1,1080 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QuizMaster - Interactive Quiz App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&display=swap');
+        
+        * {
+            font-family: 'Poppins', sans-serif;
+        }
+        
+        /* Base gradient for the body, canvas will layer animation */
+        body {
+            background: linear-gradient(135deg, #1A0A3D 0%, #3E0C5A 50%, #5A0A7D 100%);
+            min-height: 100vh;
+            color: white;
+            overflow-x: hidden; /* Prevent horizontal scrollbar from animation */
+        }
+
+        /* New: Canvas for custom animation */
+        #backgroundCanvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1; /* Ensures it's behind all app content */
+            pointer-events: none; /* Allows clicks on elements above it */
+        }
+
+        .glass {
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            background-color: rgba(255, 255, 255, 0.08); /* Slightly visible glass effect */
+        }
+        
+        .flip-card {
+            perspective: 1000px;
+        }
+        
+        .flip-card-inner {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+            transition: transform 0.6s;
+            transform-style: preserve-3d;
+        }
+        
+        .flip-card.flipped .flip-card-inner {
+            transform: rotateY(180deg);
+        }
+        
+        .flip-card-front, .flip-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            -webkit-backface-visibility: hidden;
+            backface-visibility: hidden;
+            border-radius: 1.5rem;
+            display: flex; /* Ensure content is centered */
+            align-items: center; /* Ensure content is centered */
+            justify-content: center; /* Ensure content is centered */
+        }
+        
+        .flip-card-back {
+            transform: rotateY(180deg);
+        }
+        
+        .progress-bar {
+            transition: width 0.5s ease-in-out;
+        }
+        
+        .bounce-in {
+            animation: bounceIn 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        .slide-up {
+            animation: slideUp 0.4s ease-out;
+        }
+        
+        .pulse-correct {
+            animation: pulseCorrect 0.6s ease-in-out;
+        }
+        
+        .pulse-incorrect {
+            animation: pulseIncorrect 0.6s ease-in-out;
+        }
+        
+        @keyframes bounceIn {
+            0% {
+                opacity: 0;
+                transform: scale(0.3);
+            }
+            50% {
+                opacity: 1;
+                transform: scale(1.05);
+            }
+            70% {
+                transform: scale(0.9);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes pulseCorrect {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
+            }
+        }
+        
+        @keyframes pulseIncorrect {
+            0%, 100% {
+                transform: scale(1);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
+            }
+        }
+        
+        .timer-pulse {
+            animation: timerPulse 1s ease-in-out infinite;
+        }
+        
+        @keyframes timerPulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        
+        /* Custom Radio Button Styling */
+        .custom-radio {
+            appearance: none;
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            width: 1.5rem;
+            height: 1.5rem;
+            border-radius: 50%;
+            border: 2px solid #61AFEF; /* Light Blue */
+            background-color: transparent;
+            position: relative;
+            cursor: pointer;
+            outline: none;
+            transition: all 0.2s ease-in-out;
+            flex-shrink: 0; /* Prevent shrinking in flex container */
+        }
+        
+        .custom-radio:checked {
+            background-color: #61AFEF; /* Light Blue */
+            border-color: #61AFEF;
+        }
+        
+        .custom-radio:checked::before {
+            content: '';
+            display: block;
+            width: 0.75rem;
+            height: 0.75rem;
+            background-color: #282C34; /* Dark Charcoal for dot */
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Styling for Answer Options */
+        .answer-option-label {
+            display: flex;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background-color: rgba(255, 255, 255, 0.05); /* Lighter glass */
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+
+        .answer-option-label:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: #61AFEF; /* Light Blue */
+        }
+
+        .answer-option-label.correct {
+            background-color: rgba(152, 195, 121, 0.2); /* Green tint */
+            border-color: #98C379; /* Green */
+            animation: pulseCorrect 0.6s ease-in-out;
+        }
+
+        .answer-option-label.incorrect {
+            background-color: rgba(224, 108, 117, 0.2); /* Red tint */
+            border-color: #E06C75; /* Red */
+            animation: pulseIncorrect 0.6s ease-in-out;
+        }
+
+        .answer-option-label.selected-correct {
+            background-color: #98C379; /* Solid Green */
+            color: #282C34; /* Dark text for contrast */
+            border-color: #98C379;
+        }
+
+        .answer-option-label.selected-incorrect {
+            background-color: #E06C75; /* Solid Red */
+            color: #282C34; /* Dark text for contrast */
+            border-color: #E06C75;
+        }
+        
+        /* --- Navigation Buttons (FIXED UI) --- */
+        #navigation {
+            display: flex; /* Use flexbox */
+            justify-content: space-between; /* Space out items */
+            align-items: center; /* Vertically align items */
+            padding: 0 1rem; /* Padding for spacing from screen edges */
+            flex-wrap: nowrap; /* Prevent wrapping on larger screens */
+        }
+
+        #prevBtn, #nextBtn {
+            padding: 12px 25px; /* Ample padding for button size */
+            min-width: 140px; /* Increased min-width to ensure text fits, especially for 'Previous' */
+            text-align: center; /* Ensures text is centered within the button */
+            white-space: nowrap; /* Prevents text from wrapping */
+            flex-shrink: 0; /* Prevents buttons from shrinking if space is tight */
+        }
+
+        #questionCounter {
+            margin: 0 15px; /* Provides space around the counter from buttons */
+            white-space: nowrap; /* Prevents "Question X of Y" from wrapping */
+            flex-grow: 1; /* Allows counter to take available space, pushing buttons */
+            text-align: center; /* Center the text in the expanded space */
+        }
+
+        /* Mobile optimizations for navigation */
+        @media (max-width: 640px) {
+            .question-text {
+                font-size: 1.125rem;
+                line-height: 1.6;
+            }
+            
+            .answer-option-label {
+                padding: 0.75rem 1rem;
+                font-size: 0.875rem;
+            }
+            
+            #navigation {
+                flex-direction: column; /* Stack vertically on small screens */
+                gap: 1rem; /* Space between stacked items */
+                align-items: center; /* Center items when stacked */
+                padding: 0; /* Remove horizontal padding when stacked to use full width */
+            }
+
+            #prevBtn, #nextBtn {
+                width: 100%; /* Make buttons full width when stacked */
+                max-width: 300px; /* Max width for buttons even when full width on smaller screens */
+                padding: 10px 20px; /* Slightly reduced padding for smaller screens */
+                font-size: 1em;
+            }
+
+            #questionCounter {
+                order: -1; /* Moves "Question X of Y" to the top when stacked */
+                margin-bottom: 15px; /* Space below the counter when stacked */
+                margin-left: 0;
+                margin-right: 0;
+            }
+
+            .flip-card-front, .flip-card-back {
+                padding: 1.5rem; /* Adjust padding for smaller screens */
+            }
+        }
+    </style>
+</head>
+<body>
+    <canvas id="backgroundCanvas" class="background-canvas"></canvas>
+
+    <div class="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
+        <div class="text-center mb-8 fade-in">
+            <div class="flex items-center justify-center gap-4 mb-6">
+                <div class="p-4 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl shadow-lg bounce-in">
+                    <i class="fas fa-brain text-white text-3xl"></i>
+                </div>
+                <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                    QuizMaster
+                </h1>
+            </div>
+            <p class="text-gray-300 text-lg mb-6">Test your knowledge across unique topics!</p>
+        </div>
+
+        <div id="topicSelection" class="fade-in">
+            <h2 class="text-2xl md:text-3xl font-bold text-white text-center mb-8">Choose Your Challenge</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="topic-card p-6 glass border border-white/20 rounded-2xl hover:border-cyan-400/50 transition-all cursor-pointer group" data-topic="space">
+                    <div class="text-center">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <i class="fas fa-rocket text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Space Exploration</h3>
+                        <p class="text-gray-300 text-sm">Journey through the cosmos</p>
+                        <div class="mt-4 text-cyan-400 text-sm">10 Questions</div>
+                    </div>
+                </div>
+
+                <div class="topic-card p-6 glass border border-white/20 rounded-2xl hover:border-emerald-400/50 transition-all cursor-pointer group" data-topic="mythology">
+                    <div class="text-center">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <i class="fas fa-dragon text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Mythical Creatures</h3>
+                        <p class="text-gray-300 text-sm">Legends and folklore</p>
+                        <div class="mt-4 text-emerald-400 text-sm">10 Questions</div>
+                    </div>
+                </div>
+
+                <div class="topic-card p-6 glass border border-white/20 rounded-2xl hover:border-yellow-400/50 transition-all cursor-pointer group" data-topic="future">
+                    <div class="text-center">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                            <i class="fas fa-robot text-white text-2xl"></i>
+                        </div>
+                        <h3 class="text-xl font-bold text-white mb-2">Future Tech</h3>
+                        <p class="text-gray-300 text-sm">Tomorrow's innovations</p>
+                        <div class="mt-4 text-yellow-400 text-sm">10 Questions</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="quizInterface" class="hidden">
+            <div class="mb-8">
+                <div class="flex justify-between items-center mb-2">
+                    <span class="text-white font-medium">Progress</span>
+                    <span class="text-white font-medium" id="progressText">1 / 10</span>
+                </div>
+                <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
+                    <div id="progressBar" class="progress-bar h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" style="width: 10%"></div>
+                </div>
+            </div>
+
+            <div class="text-center mb-6">
+                <div id="timer" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full text-white font-bold">
+                    <i class="fas fa-clock"></i>
+                    <span id="timeLeft">30</span>s
+                </div>
+            </div>
+
+            <div class="flip-card mb-8" id="questionCard">
+                <div class="flip-card-inner">
+                    <div class="flip-card-front">
+                        <div class="p-8 glass border border-white/20 rounded-2xl w-full h-full flex flex-col justify-center">
+                            <div class="text-center mb-6">
+                                <div id="questionIcon" class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
+                                    <i class="fas fa-question text-white text-2xl"></i>
+                                </div>
+                                <h2 class="question-text text-xl md:text-2xl font-bold text-white mb-4" id="questionText">
+                                    Loading question...
+                                </h2>
+                            </div>
+                            
+                            <div class="space-y-4" id="answerOptions">
+                                </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center" id="navigation">
+                <button id="prevBtn" class="px-6 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    <i class="fas fa-chevron-left mr-2"></i>Previous
+                </button>
+                
+                <div class="text-white font-medium" id="questionCounter">
+                    Question 1 of 10
+                </div>
+                
+                <button id="nextBtn" class="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:shadow-lg text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                    Next<i class="fas fa-chevron-right ml-2"></i>
+                </button>
+            </div>
+        </div>
+
+        <div id="resultsScreen" class="hidden text-center">
+            <div class="bounce-in">
+                <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                    <i class="fas fa-trophy text-white text-4xl"></i>
+                </div>
+                
+                <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Quiz Complete!</h2>
+                
+                <div class="glass border border-white/20 rounded-2xl p-8 mb-8">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                        <div>
+                            <div class="text-3xl font-bold text-cyan-400" id="finalScore">0</div>
+                            <div class="text-gray-300">Score</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-green-400" id="finalPercentage">0%</div>
+                            <div class="text-gray-300">Accuracy</div>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-purple-400" id="finalTime">0s</div>
+                            <div class="text-gray-300">Time</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <button id="reviewBtn" class="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg text-white rounded-xl transition-all">
+                        <i class="fas fa-eye mr-2"></i>Review Answers
+                    </button>
+                    <button id="restartBtn" class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:shadow-lg text-white rounded-xl transition-all">
+                        <i class="fas fa-redo mr-2"></i>Try Again
+                    </button>
+                    <button id="newTopicBtn" class="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:shadow-lg text-white rounded-xl transition-all">
+                        <i class="fas fa-home mr-2"></i>New Topic
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="reviewScreen" class="hidden">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-2xl md:text-3xl font-bold text-white">Answer Review</h2>
+                <button id="backToResultsBtn" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-xl transition-all">
+                    <i class="fas fa-arrow-left mr-2"></i>Back
+                </button>
+            </div>
+            <div id="reviewContent" class="space-y-6">
+                </div>
+        </div>
+    </div>
+
+    <script>
+        // --- Background Animation Script ---
+        const canvas = document.getElementById('backgroundCanvas');
+        const ctx = canvas.getContext('2d');
+
+        let particles = [];
+        const numParticles = 80; // Number of particles
+        const maxDistance = 120; // Max distance for lines to connect
+
+        // Resize canvas to fill window
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+            particles = []; // Clear particles on resize
+            initParticles(); // Re-initialize particles
+        }
+
+        // Particle class
+        class Particle {
+            constructor(x, y) {
+                this.x = x || Math.random() * canvas.width;
+                this.y = y || Math.random() * canvas.height;
+                this.vx = (Math.random() - 0.5) * 0.5; // Very slow movement
+                this.vy = (Math.random() - 0.5) * 0.5;
+                this.radius = Math.random() * 1.5 + 0.5; // Small particles
+                this.alpha = Math.random() * 0.5 + 0.1; // Faint particles
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+
+                // Wrap around canvas edges
+                if (this.x < 0) this.x = canvas.width;
+                if (this.x > canvas.width) this.x = 0;
+                if (this.y < 0) this.y = canvas.height;
+                if (this.y > canvas.height) this.y = 0;
+
+                // Subtle random movement to prevent perfect straight lines
+                this.vx += (Math.random() - 0.5) * 0.05;
+                this.vy += (Math.random() - 0.5) * 0.05;
+
+                // Dampen velocity to keep it slow
+                this.vx *= 0.99;
+                this.vy *= 0.99;
+            }
+
+            draw() {
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`; // White/faint particles
+                ctx.fill();
+            }
+        }
+
+        // Initialize particles
+        function initParticles() {
+            for (let i = 0; i < numParticles; i++) {
+                particles.push(new Particle());
+            }
+        }
+
+        // Animation loop
+        function animate() {
+            requestAnimationFrame(animate);
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
+
+            for (let i = 0; i < particles.length; i++) {
+                const p1 = particles[i];
+                p1.update();
+                p1.draw();
+
+                // Draw lines between nearby particles
+                for (let j = i + 1; j < particles.length; j++) {
+                    const p2 = particles[j];
+                    const distance = Math.hypot(p1.x - p2.x, p1.y - p2.y);
+
+                    if (distance < maxDistance) {
+                        ctx.beginPath();
+                        ctx.moveTo(p1.x, p1.y);
+                        ctx.lineTo(p2.x, p2.y);
+                        // Line alpha fades with distance
+                        ctx.strokeStyle = `rgba(180, 200, 255, ${1 - (distance / maxDistance) * 0.8})`;
+                        ctx.lineWidth = 0.5; // Thin lines
+                        ctx.stroke();
+                    }
+                }
+            }
+        }
+
+        // Event listeners for background
+        window.addEventListener('resize', resizeCanvas);
+        window.addEventListener('load', () => {
+            resizeCanvas(); // Initial resize and particle setup
+            animate();      // Start animation
+        });
+
+        // --- QuizApp Class and Logic (Existing, with minor adjustments) ---
+        class QuizApp {
+            constructor() {
+                this.currentTopic = null;
+                this.currentQuestionIndex = 0;
+                this.userAnswers = []; // Stores objects: { questionIndex: X, selectedAnswer: Y, isCorrect: true/false }
+                this.score = 0;
+                this.timer = null;
+                this.timeLeft = 15; // Decreased timer to add more challenge
+                this.totalTime = 0;
+                this.startTime = null;
+                this.questionAnswered = false; // To prevent multiple answers per question
+
+                this.quizData = {
+                    space: {
+                        title: "Space Exploration",
+                        icon: "fas fa-rocket",
+                        questions: [
+                            {
+                                question: "What is the largest planet in our solar system?",
+                                options: ["Earth", "Jupiter", "Saturn", "Neptune"],
+                                correct: 1,
+                                explanation: "Jupiter is the largest planet, with a mass greater than all other planets combined."
+                            },
+                            {
+                                question: "Which space agency successfully landed the first humans on the Moon?",
+                                options: ["ESA", "Roscosmos", "NASA", "CNSA"],
+                                correct: 2,
+                                explanation: "NASA's Apollo 11 mission successfully landed Neil Armstrong and Buzz Aldrin on the Moon in 1969."
+                            },
+                            {
+                                question: "What is the closest star to Earth (besides the Sun)?",
+                                options: ["Alpha Centauri", "Sirius", "Proxima Centauri", "Betelgeuse"],
+                                correct: 2,
+                                explanation: "Proxima Centauri is the closest star to Earth at about 4.24 light-years away."
+                            },
+                            {
+                                question: "How long does it take for light from the Sun to reach Earth?",
+                                options: ["8 minutes", "1 hour", "1 day", "1 second"],
+                                correct: 0,
+                                explanation: "Light from the Sun takes approximately 8 minutes and 20 seconds to reach Earth."
+                            },
+                            {
+                                question: "Which planet is known for having the most prominent ring system?",
+                                options: ["Jupiter", "Uranus", "Saturn", "Neptune"],
+                                correct: 2,
+                                explanation: "Saturn has the most visible and extensive ring system in our solar system."
+                            },
+                            {
+                                question: "What is the name of the galaxy that contains our solar system?",
+                                options: ["Andromeda", "Milky Way", "Whirlpool", "Triangulum"],
+                                correct: 1,
+                                explanation: "Our solar system is located in the Milky Way galaxy."
+                            },
+                            {
+                                question: "Which planet has the strongest gravitational pull?",
+                                options: ["Earth", "Jupiter", "Saturn", "Mars"],
+                                correct: 1,
+                                explanation: "Jupiter has the strongest gravitational pull due to its massive size and density."
+                            },
+                            {
+                                question: "What is the temperature of absolute zero in space?",
+                                options: ["-273°C", "-100°C", "-200°C", "-300°C"],
+                                correct: 0,
+                                explanation: "Absolute zero is -273.15°Celsius or 0 Kelvin, the coldest possible temperature."
+                            },
+                            {
+                                question: "Which mission was the first to successfully land a rover on Mars?",
+                                options: ["Viking 1", "Pathfinder", "Spirit", "Curiosity"],
+                                correct: 1,
+                                explanation: "The Mars Pathfinder mission in 1997 was the first to successfully deploy a rover (Sojourner) on Mars."
+                            },
+                            {
+                                question: "What phenomenon causes the Northern and Southern Lights?",
+                                options: ["Solar wind", "Meteor showers", "Moon phases", "Planetary alignment"],
+                                correct: 0,
+                                explanation: "Solar wind particles interacting with Earth's magnetic field create the aurora borealis and aurora australis."
+                            }
+                        ]
+                    },
+                    mythology: {
+                        title: "Mythical Creatures",
+                        icon: "fas fa-dragon",
+                        questions: [
+                            {
+                                question: "In Greek mythology, what creature has the body of a lion and the head of a human?",
+                                options: ["Griffin", "Sphinx", "Chimera", "Manticore"],
+                                correct: 1,
+                                explanation: "The Sphinx is known for its lion's body, human head, and often eagle's wings."
+                            },
+                            {
+                                question: "Which Norse mythological creature is an eight-legged horse?",
+                                options: ["Fenrir", "Sleipnir", "Jörmungandr", "Huginn"],
+                                correct: 1,
+                                explanation: "Sleipnir is Odin's eight-legged horse, capable of traveling between worlds."
+                            },
+                            {
+                                question: "What is a phoenix known for doing?",
+                                options: ["Breathing ice", "Rising from ashes", "Turning to stone", "Flying backwards"],
+                                correct: 1,
+                                explanation: "The phoenix is a mythical bird that cyclically burns itself and rises from its own ashes."
+                            },
+                            {
+                                question: "In Japanese folklore, what is a Kitsune?",
+                                options: ["Dragon", "Fox spirit", "Sea serpent", "Mountain giant"],
+                                correct: 1,
+                                explanation: "Kitsune are intelligent fox spirits in Japanese folklore, often possessing magical abilities."
+                            },
+                            {
+                                question: "Which creature from Celtic mythology shapeshifts from seal to human?",
+                                options: ["Banshee", "Selkie", "Leprechaun", "Dullahan"],
+                                correct: 1,
+                                explanation: "Selkies are mythological beings capable of shapeshifting from seal to human form."
+                            },
+                            {
+                                question: "What does the Minotaur have the head of?",
+                                options: ["Lion", "Eagle", "Bull", "Wolf"],
+                                correct: 2,
+                                explanation: "The Minotaur from Greek mythology has the head of a bull and the body of a man."
+                            },
+                            {
+                                question: "Which creature is said to turn people to stone with its gaze?",
+                                options: ["Medusa", "Harpy", "Siren", "Cyclops"],
+                                correct: 0,
+                                explanation: "Medusa, one of the three Gorgon sisters, could turn anyone who looked at her to stone."
+                            },
+                            {
+                                question: "In Chinese mythology, what do dragons typically symbolize?",
+                                options: ["Evil and destruction", "Good fortune and power", "Death and sorrow", "Chaos and madness"],
+                                correct: 1,
+                                explanation: "Unlike Western dragons, Chinese dragons are symbols of good fortune, power, and prosperity."
+                            },
+                            {
+                                question: "What is a Kraken?",
+                                options: ["Sky serpent", "Underground dweller", "Sea monster", "Forest guardian"],
+                                correct: 2,
+                                explanation: "The Kraken is a legendary sea monster, often depicted as a giant squid or octopus."
+                            },
+                            {
+                                question: "Which bird is associated with wisdom in Greek mythology?",
+                                options: ["Eagle", "Raven", "Owl", "Swan"],
+                                correct: 2,
+                                explanation: "The owl is sacred to Athena, the Greek goddess of wisdom, and symbolizes knowledge and wisdom."
+                            }
+                        ]
+                    },
+                    future: {
+                        title: "Future Technology",
+                        icon: "fas fa-robot",
+                        questions: [
+                            {
+                                question: "What does AI stand for in technology?",
+                                options: ["Automated Intelligence", "Artificial Intelligence", "Advanced Integration", "Algorithmic Interface"],
+                                correct: 1,
+                                explanation: "AI stands for Artificial Intelligence, the simulation of human intelligence in machines."
+                            },
+                            {
+                                question: "What is quantum computing primarily designed to solve?",
+                                options: ["Simple calculations", "Complex problems", "Basic programming", "File storage"],
+                                correct: 1,
+                                explanation: "Quantum computing uses quantum mechanics to solve complex problems much faster than classical computers."
+                            },
+                            {
+                                question: "What is the Internet of Things (IoT)?",
+                                options: ["A new social media platform", "Connected everyday devices", "A computer virus", "A programming language"],
+                                correct: 1,
+                                explanation: "IoT refers to the network of physical devices connected to the internet, collecting and sharing data."
+                            },
+                            {
+                                question: "What technology enables virtual reality experiences?",
+                                options: ["Radio waves", "Head-mounted displays", "Solar panels", "Magnetic fields"],
+                                correct: 1,
+                                explanation: "VR primarily uses head-mounted displays along with sensors to create immersive virtual experiences."
+                            },
+                            {
+                                question: "What is blockchain technology best known for?",
+                                options: ["Video streaming", "Secure transactions", "Photo editing", "Music production"],
+                                correct: 1,
+                                explanation: "Blockchain is a distributed ledger technology known for enabling secure, transparent transactions."
+                            },
+                            {
+                                question: "What does 5G technology primarily improve?",
+                                options: ["Battery life", "Internet speed", "Screen resolution", "Camera quality"],
+                                correct: 1,
+                                explanation: "5G technology significantly improves internet speed and reduces latency for mobile communications."
+                            },
+                            {
+                                question: "What is machine learning?",
+                                options: ["Teaching robots to walk", "Computers learning from data", "Building physical machines", "Programming video games"],
+                                correct: 1,
+                                explanation: "Machine learning is a subset of AI where computers learn and improve from experience without being explicitly programmed."
+                            },
+                            {
+                                question: "What is augmented reality (AR)?",
+                                options: ["Completely virtual worlds", "Digital info overlaid on real world", "Advanced robotics", "Quantum physics"],
+                                correct: 1,
+                                explanation: "AR overlays digital information and virtual objects onto the real world through devices like smartphones or AR glasses."
+                            },
+                            {
+                                question: "What is the primary goal of autonomous vehicles?",
+                                options: ["Faster speeds", "Self-driving capability", "Better fuel efficiency", "Louder engines"],
+                                correct: 1,
+                                explanation: "Autonomous vehicles are designed to navigate and operate without human intervention using sensors and AI."
+                            },
+                            {
+                                question: "What is nanotechnology?",
+                                options: ["Very large technology", "Manipulation of matter at atomic scale", "Time travel research", "Space exploration tools"],
+                                correct: 1,
+                                explanation: "Nanotechnology involves manipulating matter at the atomic and molecular scale, typically 1-100 nanometers."
+                            }
+                        ]
+                    }
+                };
+                
+                this.init();
+            }
+
+            init() {
+                this.bindEvents();
+                this.showTopicSelection();
+            }
+
+            bindEvents() {
+                // Topic selection
+                document.querySelectorAll('.topic-card').forEach(card => {
+                    card.addEventListener('click', (e) => {
+                        const topic = e.currentTarget.dataset.topic;
+                        this.startQuiz(topic);
+                    });
+                });
+
+                // Navigation buttons
+                document.getElementById('nextBtn').addEventListener('click', () => this.nextQuestion());
+                document.getElementById('prevBtn').addEventListener('click', () => this.prevQuestion());
+
+                // Result buttons
+                document.getElementById('restartBtn').addEventListener('click', () => this.restartQuiz());
+                document.getElementById('newTopicBtn').addEventListener('click', () => this.showTopicSelection());
+                document.getElementById('reviewBtn').addEventListener('click', () => this.showReview());
+                document.getElementById('backToResultsBtn').addEventListener('click', () => this.showResults());
+            }
+
+            showTopicSelection() {
+                document.getElementById('topicSelection').classList.remove('hidden');
+                document.getElementById('quizInterface').classList.add('hidden');
+                document.getElementById('resultsScreen').classList.add('hidden');
+                document.getElementById('reviewScreen').classList.add('hidden');
+                this.stopTimer(); // Ensure timer is stopped if returning from quiz
+            }
+
+            startQuiz(topic) {
+                this.currentTopic = topic;
+                this.currentQuestionIndex = 0;
+                this.userAnswers = Array(this.quizData[topic].questions.length).fill(null); // Initialize user answers array
+                this.score = 0;
+                this.totalTime = 0;
+                this.startTime = Date.now();
+                this.questionAnswered = false;
+                
+                document.getElementById('topicSelection').classList.add('hidden');
+                document.getElementById('quizInterface').classList.remove('hidden');
+                
+                this.loadQuestion();
+                this.startTimer();
+            }
+
+            startTimer() {
+                this.stopTimer(); // Clear any existing timer
+                this.timeLeft = 15; // Reset time for current question
+                document.getElementById('timeLeft').textContent = this.timeLeft;
+                document.getElementById('timer').classList.remove('timer-pulse');
+
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    document.getElementById('timeLeft').textContent = this.timeLeft;
+
+                    if (this.timeLeft <= 5 && this.timeLeft > 0) {
+                        document.getElementById('timer').classList.add('timer-pulse');
+                    } else if (this.timeLeft <= 0) {
+                        this.stopTimer();
+                        this.handleTimeUp();
+                    }
+                }, 1000);
+            }
+
+            stopTimer() {
+                clearInterval(this.timer);
+                document.getElementById('timer').classList.remove('timer-pulse');
+            }
+
+            handleTimeUp() {
+                if (!this.questionAnswered) { // Only mark incorrect if not answered
+                    this.recordAnswer(this.currentQuestionIndex, -1, false); // -1 to indicate no answer selected
+                }
+                this.nextQuestion();
+            }
+
+            loadQuestion() {
+                this.questionAnswered = false;
+                this.stopTimer(); // Stop timer before loading new question
+                this.startTimer(); // Start timer for the new question
+
+                const quiz = this.quizData[this.currentTopic];
+                const question = quiz.questions[this.currentQuestionIndex];
+                
+                const questionCard = document.getElementById('questionCard');
+                questionCard.classList.remove('flipped'); // Ensure card is front-facing
+
+                // Update question content
+                document.getElementById('questionText').textContent = question.question;
+                document.getElementById('questionIcon').className = `w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center ${quiz.icon}`;
+
+                const answerOptionsDiv = document.getElementById('answerOptions');
+                answerOptionsDiv.innerHTML = ''; // Clear previous options
+
+                question.options.forEach((option, index) => {
+                    const label = document.createElement('label');
+                    label.className = 'answer-option-label flex items-center gap-4 text-left text-white';
+                    label.innerHTML = `
+                        <input type="radio" name="answer" value="${index}" class="custom-radio" data-index="${index}">
+                        <span>${option}</span>
+                    `;
+                    answerOptionsDiv.appendChild(label);
+
+                    // Add event listener to each radio button
+                    const radio = label.querySelector('input[type="radio"]');
+                    radio.addEventListener('change', (e) => this.handleAnswerSelection(e));
+
+                    // If user has already answered this question, pre-select and show feedback
+                    if (this.userAnswers[this.currentQuestionIndex] !== null) {
+                        const savedAnswer = this.userAnswers[this.currentQuestionIndex];
+                        if (savedAnswer.selectedAnswer === index) {
+                            radio.checked = true;
+                        }
+                        this.applyFeedbackStyling(index, savedAnswer.isCorrect, question.correct, true);
+                    }
+                });
+
+                this.updateNavigationButtons();
+                this.updateProgressBar();
+            }
+
+            handleAnswerSelection(event) {
+                if (this.questionAnswered) return; // Prevent changing answer after submission
+
+                const selectedAnswerIndex = parseInt(event.target.value);
+                const currentQuestion = this.quizData[this.currentTopic].questions[this.currentQuestionIndex];
+                const isCorrect = selectedAnswerIndex === currentQuestion.correct;
+
+                this.recordAnswer(this.currentQuestionIndex, selectedAnswerIndex, isCorrect);
+                this.questionAnswered = true; // Mark question as answered
+
+                // Apply immediate visual feedback
+                this.applyFeedbackStyling(selectedAnswerIndex, isCorrect, currentQuestion.correct, false);
+
+                // Add score tally animation
+                if (isCorrect) {
+                    this.score++;
+                    // Optional: You could add a specific element to animate, e.g., a checkmark pop-up
+                }
+
+                this.stopTimer(); // Stop timer immediately after answer
+            }
+
+            recordAnswer(questionIndex, selectedAnswer, isCorrect) {
+                this.userAnswers[questionIndex] = {
+                    questionIndex: questionIndex,
+                    selectedAnswer: selectedAnswer,
+                    isCorrect: isCorrect,
+                    timeTaken: 15 - this.timeLeft // Time taken for this question
+                };
+            }
+
+            applyFeedbackStyling(selectedAnswerIndex, isCorrect, correctAnswerIndex, isReviewMode) {
+                const answerOptions = document.querySelectorAll('#answerOptions .answer-option-label');
+                answerOptions.forEach((label, index) => {
+                    const radio = label.querySelector('input[type="radio"]');
+                    radio.disabled = true; // Disable all radio buttons after selection
+
+                    label.classList.remove('selected-correct', 'selected-incorrect', 'correct', 'incorrect');
+
+                    if (index === correctAnswerIndex) {
+                        label.classList.add('correct');
+                        if (isReviewMode && selectedAnswerIndex === correctAnswerIndex) {
+                            label.classList.add('selected-correct');
+                        }
+                    } else if (index === selectedAnswerIndex) {
+                        label.classList.add('incorrect');
+                        if (isReviewMode && selectedAnswerIndex !== correctAnswerIndex) {
+                            label.classList.add('selected-incorrect');
+                        }
+                    }
+                });
+
+                if (!isReviewMode && isCorrect) {
+                    // console.log("Correct answer! Pulse animation.");
+                    // document.getElementById('questionCard').querySelector('.glass').classList.add('pulse-correct');
+                } else if (!isReviewMode && !isCorrect) {
+                    // console.log("Incorrect answer! Pulse animation.");
+                    // document.getElementById('questionCard').querySelector('.glass').classList.add('pulse-incorrect');
+                }
+            }
+
+            nextQuestion() {
+                const quizLength = this.quizData[this.currentTopic].questions.length;
+                
+                // If not answered, record as incorrect (timed out)
+                if (!this.questionAnswered && this.userAnswers[this.currentQuestionIndex] === null) {
+                    this.recordAnswer(this.currentQuestionIndex, -1, false); // -1 for unanswered
+                }
+
+                if (this.currentQuestionIndex < quizLength - 1) {
+                    this.currentQuestionIndex++;
+                    this.animateQuestionChange(() => this.loadQuestion());
+                } else {
+                    this.endQuiz();
+                }
+            }
+
+            prevQuestion() {
+                if (this.currentQuestionIndex > 0) {
+                    this.currentQuestionIndex--;
+                    this.animateQuestionChange(() => this.loadQuestion());
+                }
+            }
+
+            animateQuestionChange(callback) {
+                const questionCard = document.getElementById('questionCard');
+                questionCard.classList.add('flipped'); // Start flip animation
+
+                // Listen for when the flip animation is half-way
+                setTimeout(() => {
+                    callback(); // Load new content
+                    questionCard.classList.remove('flipped'); // Reset for next flip
+                }, 300); // Half of the 0.6s transition time
+            }
+
+            updateNavigationButtons() {
+                const quizLength = this.quizData[this.currentTopic].questions.length;
+                document.getElementById('prevBtn').disabled = this.currentQuestionIndex === 0;
+                document.getElementById('nextBtn').textContent = this.currentQuestionIndex === quizLength - 1 ? 'Finish Quiz' : 'Next';
+                document.getElementById('nextBtn').innerHTML = this.currentQuestionIndex === quizLength - 1 ? '<i class="fas fa-flag-checkered mr-2"></i>Finish Quiz' : 'Next<i class="fas fa-chevron-right ml-2"></i>';
+
+                document.getElementById('questionCounter').textContent = `Question ${this.currentQuestionIndex + 1} of ${quizLength}`;
+            }
+
+            updateProgressBar() {
+                const quizLength = this.quizData[this.currentTopic].questions.length;
+                const progress = ((this.currentQuestionIndex + 1) / quizLength) * 100;
+                document.getElementById('progressBar').style.width = `${progress}%`;
+                document.getElementById('progressText').textContent = `${this.currentQuestionIndex + 1} / ${quizLength}`;
+            }
+
+            endQuiz() {
+                this.stopTimer();
+                this.totalTime = Math.floor((Date.now() - this.startTime) / 1000); // Calculate total time in seconds
+
+                document.getElementById('quizInterface').classList.add('hidden');
+                document.getElementById('resultsScreen').classList.remove('hidden');
+
+                const totalQuestions = this.quizData[this.currentTopic].questions.length;
+                const percentage = (this.score / totalQuestions) * 100;
+
+                document.getElementById('finalScore').textContent = `${this.score} / ${totalQuestions}`;
+                document.getElementById('finalPercentage').textContent = `${percentage.toFixed(0)}%`;
+                document.getElementById('finalTime').textContent = `${this.totalTime}s`;
+
+                // Add bounce-in animation to results screen
+                document.getElementById('resultsScreen').classList.add('bounce-in');
+            }
+
+            restartQuiz() {
+                // Remove bounce-in before restarting to ensure it plays again
+                document.getElementById('resultsScreen').classList.remove('bounce-in'); 
+                this.startQuiz(this.currentTopic);
+            }
+
+            showReview() {
+                document.getElementById('resultsScreen').classList.add('hidden');
+                document.getElementById('reviewScreen').classList.remove('hidden');
+                this.populateReviewContent();
+            }
+
+            populateReviewContent() {
+                const reviewContentDiv = document.getElementById('reviewContent');
+                reviewContentDiv.innerHTML = ''; // Clear previous review content
+                
+                const questions = this.quizData[this.currentTopic].questions;
+
+                this.userAnswers.forEach((userAnswer, index) => {
+                    const question = questions[index];
+                    const isCorrect = userAnswer ? userAnswer.isCorrect : false; // Handle unanswered
+                    const selectedOptionText = userAnswer && userAnswer.selectedAnswer !== -1 ? question.options[userAnswer.selectedAnswer] : "No answer";
+                    const correctOptionText = question.options[question.correct];
+
+                    const reviewItem = document.createElement('div');
+                    reviewItem.className = `glass border rounded-2xl p-6 fade-in ${isCorrect ? 'border-green-400/50' : 'border-red-400/50'}`;
+                    
+                    reviewItem.innerHTML = `
+                        <h3 class="text-lg font-bold text-white mb-2">Q${index + 1}: ${question.question}</h3>
+                        <p class="text-gray-300 mb-1">Your Answer: <span class="${isCorrect ? 'text-green-300' : 'text-red-300'} font-semibold">${selectedOptionText} ${userAnswer && userAnswer.selectedAnswer === -1 ? '(Unanswered)' : ''}</span></p>
+                        <p class="text-gray-300 mb-3">Correct Answer: <span class="text-green-300 font-semibold">${correctOptionText}</span></p>
+                        <p class="text-gray-400 text-sm">Explanation: ${question.explanation}</p>
+                    `;
+                    reviewContentDiv.appendChild(reviewItem);
+                });
+            }
+
+            showResults() {
+                document.getElementById('reviewScreen').classList.add('hidden');
+                document.getElementById('resultsScreen').classList.remove('hidden');
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            new QuizApp();
+        });
+    </script>
+</body>
+</html>
