@@ -11,35 +11,57 @@
         
         * {
             font-family: 'Poppins', sans-serif;
+            box-sizing: border-box; /* Crucial for consistent box model */
         }
         
-        /* Base gradient for the body, canvas will layer animation */
         body {
-            background: linear-gradient(135deg, #1A0A3D 0%, #3E0C5A 50%, #5A0A7D 100%);
-            min-height: 100vh;
-            color: white;
-            overflow-x: hidden; /* Prevent horizontal scrollbar from animation */
+            background-color: #282C34; /* Base dark charcoal */
+            overflow-x: hidden; /* Prevent horizontal scrollbar from animated background */
+            min-height: 100vh; /* Ensure body takes full viewport height */
+            display: flex;
+            flex-direction: column;
+            justify-content: center; /* Center content vertically */
+            align-items: center; /* Center content horizontally */
         }
 
-        /* New: Canvas for custom animation */
-        #backgroundCanvas {
+        /* Unique Nebula Background */
+        body::before {
+            content: '';
             position: fixed;
             top: 0;
             left: 0;
-            width: 100vw;
-            height: 100vh;
-            z-index: -1; /* Ensures it's behind all app content */
-            pointer-events: none; /* Allows clicks on elements above it */
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 15% 50%, rgba(97, 175, 239, 0.08) 0%, transparent 40%), /* Light Blue - Reduced opacity */
+                radial-gradient(circle at 85% 30%, rgba(224, 108, 117, 0.08) 0%, transparent 40%), /* Red - Reduced opacity */
+                radial-gradient(circle at 40% 80%, rgba(152, 195, 121, 0.08) 0%, transparent 40%), /* Green - Reduced opacity */
+                radial-gradient(circle at 60% 10%, rgba(171, 178, 191, 0.08) 0%, transparent 40%), /* Light Gray - Reduced opacity */
+                radial-gradient(circle at 5% 90%, rgba(255, 215, 0, 0.06) 0%, transparent 40%); /* Gold - Reduced opacity */
+            background-size: 150% 150%;
+            animation: nebulaFlow 25s ease-in-out infinite alternate; /* Slower animation */
+            z-index: 0; /* Ensure it stays behind content */
+            pointer-events: none; /* Make sure it doesn't block clicks */
         }
+
+        @keyframes nebulaFlow {
+            0% { background-position: 0% 0%; }
+            100% { background-position: 100% 100%; }
+        }
+        /* End Unique Nebula Background */
 
         .glass {
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            background-color: rgba(255, 255, 255, 0.08); /* Slightly visible glass effect */
+            background-color: rgba(255, 255, 255, 0.08); /* Slightly more opaque white */
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37);
+            border: 1px solid rgba(255, 255, 255, 0.18); /* Subtle border for glass effect */
         }
         
         .flip-card {
             perspective: 1000px;
+            height: auto; /* Allow card height to adjust to content */
+            min-height: 350px; /* Minimum height for visual consistency */
         }
         
         .flip-card-inner {
@@ -62,9 +84,11 @@
             -webkit-backface-visibility: hidden;
             backface-visibility: hidden;
             border-radius: 1.5rem;
-            display: flex; /* Ensure content is centered */
-            align-items: center; /* Ensure content is centered */
-            justify-content: center; /* Ensure content is centered */
+            display: flex; 
+            flex-direction: column;
+            justify-content: space-between; /* Distribute space between icon/question and options */
+            align-items: center;
+            padding: 2rem; /* Consistent padding inside the card */
         }
         
         .flip-card-back {
@@ -88,11 +112,11 @@
         }
         
         .pulse-correct {
-            animation: pulseCorrect 0.6s ease-in-out;
+            animation: pulseCorrect 0.6s ease-in-out forwards; /* Keep final state */
         }
         
         .pulse-incorrect {
-            animation: pulseIncorrect 0.6s ease-in-out;
+            animation: pulseIncorrect 0.6s ease-in-out forwards; /* Keep final state */
         }
         
         @keyframes bounceIn {
@@ -127,7 +151,7 @@
         @keyframes slideUp {
             from {
                 opacity: 0;
-                transform: translateY(50px);
+                transform: translateY(20px);
             }
             to {
                 opacity: 1;
@@ -140,8 +164,8 @@
                 transform: scale(1);
             }
             50% {
-                transform: scale(1.05);
-                box-shadow: 0 0 30px rgba(16, 185, 129, 0.6);
+                transform: scale(1.02);
+                box-shadow: 0 0 25px rgba(152, 195, 121, 0.9); /* Green glow */
             }
         }
         
@@ -150,8 +174,8 @@
                 transform: scale(1);
             }
             50% {
-                transform: scale(1.05);
-                box-shadow: 0 0 30px rgba(239, 68, 68, 0.6);
+                transform: scale(1.02);
+                box-shadow: 0 0 25px rgba(224, 108, 117, 0.9); /* Red glow */
             }
         }
         
@@ -164,192 +188,96 @@
             50% { opacity: 0.7; }
         }
         
-        /* Custom Radio Button Styling */
-        .custom-radio {
-            appearance: none;
-            -webkit-appearance: none;
-            -moz-appearance: none;
-            width: 1.5rem;
-            height: 1.5rem;
-            border-radius: 50%;
-            border: 2px solid #61AFEF; /* Light Blue */
-            background-color: transparent;
-            position: relative;
-            cursor: pointer;
-            outline: none;
-            transition: all 0.2s ease-in-out;
-            flex-shrink: 0; /* Prevent shrinking in flex container */
-        }
-        
-        .custom-radio:checked {
-            background-color: #61AFEF; /* Light Blue */
-            border-color: #61AFEF;
-        }
-        
-        .custom-radio:checked::before {
-            content: '';
-            display: block;
-            width: 0.75rem;
-            height: 0.75rem;
-            background-color: #282C34; /* Dark Charcoal for dot */
-            border-radius: 50%;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-        }
-
-        /* Styling for Answer Options */
-        .answer-option-label {
-            display: flex;
-            align-items: center;
-            padding: 1rem 1.5rem;
-            background-color: rgba(255, 255, 255, 0.05); /* Lighter glass */
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 1rem;
-            cursor: pointer;
-            transition: all 0.2s ease-in-out;
-        }
-
-        .answer-option-label:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-            border-color: #61AFEF; /* Light Blue */
-        }
-
-        .answer-option-label.correct {
-            background-color: rgba(152, 195, 121, 0.2); /* Green tint */
-            border-color: #98C379; /* Green */
-            animation: pulseCorrect 0.6s ease-in-out;
-        }
-
-        .answer-option-label.incorrect {
-            background-color: rgba(224, 108, 117, 0.2); /* Red tint */
-            border-color: #E06C75; /* Red */
-            animation: pulseIncorrect 0.6s ease-in-out;
-        }
-
-        .answer-option-label.selected-correct {
-            background-color: #98C379; /* Solid Green */
-            color: #282C34; /* Dark text for contrast */
-            border-color: #98C379;
-        }
-
-        .answer-option-label.selected-incorrect {
-            background-color: #E06C75; /* Solid Red */
-            color: #282C34; /* Dark text for contrast */
-            border-color: #E06C75;
-        }
-        
-        /* --- Navigation Buttons (FIXED UI) --- */
-        #navigation {
-            display: flex; /* Use flexbox */
-            justify-content: space-between; /* Space out items */
-            align-items: center; /* Vertically align items */
-            padding: 0 1rem; /* Padding for spacing from screen edges */
-            flex-wrap: nowrap; /* Prevent wrapping on larger screens */
-        }
-
-        #prevBtn, #nextBtn {
-            padding: 12px 25px; /* Ample padding for button size */
-            min-width: 140px; /* Increased min-width to ensure text fits, especially for 'Previous' */
-            text-align: center; /* Ensures text is centered within the button */
-            white-space: nowrap; /* Prevents text from wrapping */
-            flex-shrink: 0; /* Prevents buttons from shrinking if space is tight */
-        }
-
-        #questionCounter {
-            margin: 0 15px; /* Provides space around the counter from buttons */
-            white-space: nowrap; /* Prevents "Question X of Y" from wrapping */
-            flex-grow: 1; /* Allows counter to take available space, pushing buttons */
-            text-align: center; /* Center the text in the expanded space */
-        }
-
-        /* Mobile optimizations for navigation */
+        /* Mobile optimizations */
         @media (max-width: 640px) {
             .question-text {
                 font-size: 1.125rem;
                 line-height: 1.6;
             }
             
-            .answer-option-label {
-                padding: 0.75rem 1rem;
+            .answer-option {
+                padding: 1rem;
                 font-size: 0.875rem;
             }
             
-            #navigation {
-                flex-direction: column; /* Stack vertically on small screens */
-                gap: 1rem; /* Space between stacked items */
-                align-items: center; /* Center items when stacked */
-                padding: 0; /* Remove horizontal padding when stacked to use full width */
+            .mobile-stack {
+                flex-direction: column;
+                gap: 0.75rem;
             }
+            .question-info-bar { /* Adjusted for mobile */
+                flex-direction: column;
+                gap: 0.5rem;
+                padding: 0.5rem;
+            }
+        }
 
-            #prevBtn, #nextBtn {
-                width: 100%; /* Make buttons full width when stacked */
-                max-width: 300px; /* Max width for buttons even when full width on smaller screens */
-                padding: 10px 20px; /* Slightly reduced padding for smaller screens */
-                font-size: 1em;
-            }
+        /* Loading Spinner for LLM call */
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #61AFEF; /* Blue */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
 
-            #questionCounter {
-                order: -1; /* Moves "Question X of Y" to the top when stacked */
-                margin-bottom: 15px; /* Space below the counter when stacked */
-                margin-left: 0;
-                margin-right: 0;
-            }
-
-            .flip-card-front, .flip-card-back {
-                padding: 1.5rem; /* Adjust padding for smaller screens */
-            }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
         }
     </style>
 </head>
-<body>
-    <canvas id="backgroundCanvas" class="background-canvas"></canvas>
-
-    <div class="relative z-10 container mx-auto px-4 py-8 max-w-4xl">
+<body class="relative">
+    <!-- Main content container -->
+    <div class="relative z-10 container mx-auto px-4 py-8 max-w-4xl flex-grow">
+        <!-- Header -->
         <div class="text-center mb-8 fade-in">
             <div class="flex items-center justify-center gap-4 mb-6">
-                <div class="p-4 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-2xl shadow-lg bounce-in">
+                <div class="p-4 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-2xl shadow-lg bounce-in">
                     <i class="fas fa-brain text-white text-3xl"></i>
                 </div>
-                <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                <h1 class="text-4xl md:text-5xl font-bold bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent">
                     QuizMaster
                 </h1>
             </div>
             <p class="text-gray-300 text-lg mb-6">Test your knowledge across unique topics!</p>
         </div>
 
+        <!-- Topic Selection Screen -->
         <div id="topicSelection" class="fade-in">
             <h2 class="text-2xl md:text-3xl font-bold text-white text-center mb-8">Choose Your Challenge</h2>
             <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                <div class="topic-card p-6 glass border border-white/20 rounded-2xl hover:border-cyan-400/50 transition-all cursor-pointer group" data-topic="space">
+                <!-- Space Exploration -->
+                <div class="topic-card p-6 glass rounded-2xl hover:border-blue-400/50 transition-all cursor-pointer group" data-topic="space">
                     <div class="text-center">
-                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                             <i class="fas fa-rocket text-white text-2xl"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-white mb-2">Space Exploration</h3>
+                        <h3 class="text-xl font-bold text-gray-100 mb-2">Space Exploration</h3>
                         <p class="text-gray-300 text-sm">Journey through the cosmos</p>
-                        <div class="mt-4 text-cyan-400 text-sm">10 Questions</div>
+                        <div class="mt-4 text-blue-400 text-sm">10 Questions</div>
                     </div>
                 </div>
 
-                <div class="topic-card p-6 glass border border-white/20 rounded-2xl hover:border-emerald-400/50 transition-all cursor-pointer group" data-topic="mythology">
+                <!-- Mythical Creatures -->
+                <div class="topic-card p-6 glass rounded-2xl hover:border-green-400/50 transition-all cursor-pointer group" data-topic="mythology">
                     <div class="text-center">
-                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-green-500 to-emerald-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                             <i class="fas fa-dragon text-white text-2xl"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-white mb-2">Mythical Creatures</h3>
+                        <h3 class="text-xl font-bold text-gray-100 mb-2">Mythical Creatures</h3>
                         <p class="text-gray-300 text-sm">Legends and folklore</p>
-                        <div class="mt-4 text-emerald-400 text-sm">10 Questions</div>
+                        <div class="mt-4 text-green-400 text-sm">10 Questions</div>
                     </div>
                 </div>
 
-                <div class="topic-card p-6 glass border border-white/20 rounded-2xl hover:border-yellow-400/50 transition-all cursor-pointer group" data-topic="future">
+                <!-- Future Technology -->
+                <div class="topic-card p-6 glass rounded-2xl hover:border-yellow-400/50 transition-all cursor-pointer group" data-topic="future">
                     <div class="text-center">
                         <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
                             <i class="fas fa-robot text-white text-2xl"></i>
                         </div>
-                        <h3 class="text-xl font-bold text-white mb-2">Future Tech</h3>
+                        <h3 class="text-xl font-bold text-gray-100 mb-2">Future Tech</h3>
                         <p class="text-gray-300 text-sm">Tomorrow's innovations</p>
                         <div class="mt-4 text-yellow-400 text-sm">10 Questions</div>
                     </div>
@@ -357,71 +285,83 @@
             </div>
         </div>
 
+        <!-- Quiz Interface -->
         <div id="quizInterface" class="hidden">
-            <div class="mb-8">
+            <!-- Progress Bar -->
+            <div class="mb-6">
                 <div class="flex justify-between items-center mb-2">
                     <span class="text-white font-medium">Progress</span>
                     <span class="text-white font-medium" id="progressText">1 / 10</span>
                 </div>
                 <div class="w-full bg-gray-700 rounded-full h-3 overflow-hidden">
-                    <div id="progressBar" class="progress-bar h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" style="width: 10%"></div>
+                    <div id="progressBar" class="progress-bar h-full bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full" style="width: 10%"></div>
                 </div>
             </div>
 
-            <div class="text-center mb-6">
-                <div id="timer" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full text-white font-bold">
+            <!-- Question Info Bar (Timer, Icon, Question Number) -->
+            <div class="glass rounded-2xl p-4 mb-8 flex justify-between items-center question-info-bar">
+                <!-- Timer -->
+                <div id="timer" class="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-red-500 to-pink-500 rounded-full text-white font-bold shadow-md">
                     <i class="fas fa-clock"></i>
                     <span id="timeLeft">30</span>s
                 </div>
+
+                <!-- Question Icon and Number -->
+                <div class="flex items-center gap-3">
+                    <div id="questionIcon" class="w-12 h-12 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center shadow-md">
+                        <i class="fas fa-question text-white text-xl"></i>
+                    </div>
+                    <div class="text-white font-medium text-lg" id="questionCounter">
+                        Question 1 of 10
+                    </div>
+                </div>
+                <!-- Placeholder for balance on desktop, hidden on mobile -->
+                <div class="w-24 h-1 hidden sm:block"></div> 
             </div>
 
+            <!-- Question Card -->
             <div class="flip-card mb-8" id="questionCard">
                 <div class="flip-card-inner">
-                    <div class="flip-card-front">
-                        <div class="p-8 glass border border-white/20 rounded-2xl w-full h-full flex flex-col justify-center">
-                            <div class="text-center mb-6">
-                                <div id="questionIcon" class="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center">
-                                    <i class="fas fa-question text-white text-2xl"></i>
-                                </div>
-                                <h2 class="question-text text-xl md:text-2xl font-bold text-white mb-4" id="questionText">
-                                    Loading question...
-                                </h2>
-                            </div>
-                            
-                            <div class="space-y-4" id="answerOptions">
-                                </div>
+                    <div class="flip-card-front glass rounded-2xl">
+                        <!-- Content of the front face -->
+                        <div class="flex-grow flex flex-col justify-center items-center text-center">
+                            <h2 class="question-text text-xl md:text-2xl font-bold text-white mb-6" id="questionText">
+                                Loading question...
+                            </h2>
+                        </div>
+                        
+                        <div class="w-full space-y-4" id="answerOptions">
+                            <!-- Answer options will be inserted here -->
                         </div>
                     </div>
                 </div>
             </div>
 
-            <div class="flex justify-between items-center" id="navigation">
-                <button id="prevBtn" class="px-6 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+            <!-- Navigation -->
+            <div class="flex justify-between items-center mobile-stack mt-8" id="navigation">
+                <button id="prevBtn" class="px-6 py-3 bg-gray-600 hover:bg-gray-500 text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
                     <i class="fas fa-chevron-left mr-2"></i>Previous
                 </button>
                 
-                <div class="text-white font-medium" id="questionCounter">
-                    Question 1 of 10
-                </div>
-                
-                <button id="nextBtn" class="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:shadow-lg text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+                <button id="nextBtn" class="px-6 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:shadow-xl text-white rounded-xl transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-md">
                     Next<i class="fas fa-chevron-right ml-2"></i>
                 </button>
             </div>
         </div>
 
+        <!-- Results Screen -->
         <div id="resultsScreen" class="hidden text-center">
             <div class="bounce-in">
-                <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center">
+                <div class="w-24 h-24 mx-auto mb-6 bg-gradient-to-r from-green-500 to-emerald-500 rounded-full flex items-center justify-center shadow-lg">
                     <i class="fas fa-trophy text-white text-4xl"></i>
                 </div>
                 
                 <h2 class="text-3xl md:text-4xl font-bold text-white mb-4">Quiz Complete!</h2>
                 
-                <div class="glass border border-white/20 rounded-2xl p-8 mb-8">
+                <div class="glass rounded-2xl p-8 mb-8">
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
                         <div>
-                            <div class="text-3xl font-bold text-cyan-400" id="finalScore">0</div>
+                            <div class="text-3xl font-bold text-blue-400" id="finalScore">0</div>
                             <div class="text-gray-300">Score</div>
                         </div>
                         <div>
@@ -436,141 +376,46 @@
                 </div>
                 
                 <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                    <button id="reviewBtn" class="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-lg text-white rounded-xl transition-all">
+                    <button id="reviewBtn" class="px-8 py-3 bg-gradient-to-r from-purple-500 to-pink-500 hover:shadow-xl text-white rounded-xl transition-all shadow-md">
                         <i class="fas fa-eye mr-2"></i>Review Answers
                     </button>
-                    <button id="restartBtn" class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:shadow-lg text-white rounded-xl transition-all">
+                    <button id="restartBtn" class="px-8 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:shadow-xl text-white rounded-xl transition-all shadow-md">
                         <i class="fas fa-redo mr-2"></i>Try Again
                     </button>
-                    <button id="newTopicBtn" class="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:shadow-lg text-white rounded-xl transition-all">
+                    <button id="newTopicBtn" class="px-8 py-3 bg-gradient-to-r from-blue-500 to-cyan-500 hover:shadow-xl text-white rounded-xl transition-all shadow-md">
                         <i class="fas fa-home mr-2"></i>New Topic
                     </button>
                 </div>
             </div>
         </div>
 
+        <!-- Review Screen -->
         <div id="reviewScreen" class="hidden">
-            <div class="flex justify-between items-center mb-8">
+            <div class="flex justify-between items-center mb-8 mobile-stack">
                 <h2 class="text-2xl md:text-3xl font-bold text-white">Answer Review</h2>
-                <button id="backToResultsBtn" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-xl transition-all">
+                <button id="backToResultsBtn" class="px-4 py-2 bg-gray-600 hover:bg-gray-500 text-white rounded-xl transition-all shadow-md">
                     <i class="fas fa-arrow-left mr-2"></i>Back
                 </button>
             </div>
             <div id="reviewContent" class="space-y-6">
-                </div>
+                <!-- Review content will be populated here -->
+            </div>
         </div>
     </div>
 
     <script>
-        // --- Background Animation Script ---
-        const canvas = document.getElementById('backgroundCanvas');
-        const ctx = canvas.getContext('2d');
-
-        let particles = [];
-        const numParticles = 80; // Number of particles
-        const maxDistance = 120; // Max distance for lines to connect
-
-        // Resize canvas to fill window
-        function resizeCanvas() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
-            particles = []; // Clear particles on resize
-            initParticles(); // Re-initialize particles
-        }
-
-        // Particle class
-        class Particle {
-            constructor(x, y) {
-                this.x = x || Math.random() * canvas.width;
-                this.y = y || Math.random() * canvas.height;
-                this.vx = (Math.random() - 0.5) * 0.5; // Very slow movement
-                this.vy = (Math.random() - 0.5) * 0.5;
-                this.radius = Math.random() * 1.5 + 0.5; // Small particles
-                this.alpha = Math.random() * 0.5 + 0.1; // Faint particles
-            }
-
-            update() {
-                this.x += this.vx;
-                this.y += this.vy;
-
-                // Wrap around canvas edges
-                if (this.x < 0) this.x = canvas.width;
-                if (this.x > canvas.width) this.x = 0;
-                if (this.y < 0) this.y = canvas.height;
-                if (this.y > canvas.height) this.y = 0;
-
-                // Subtle random movement to prevent perfect straight lines
-                this.vx += (Math.random() - 0.5) * 0.05;
-                this.vy += (Math.random() - 0.5) * 0.05;
-
-                // Dampen velocity to keep it slow
-                this.vx *= 0.99;
-                this.vy *= 0.99;
-            }
-
-            draw() {
-                ctx.beginPath();
-                ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
-                ctx.fillStyle = `rgba(255, 255, 255, ${this.alpha})`; // White/faint particles
-                ctx.fill();
-            }
-        }
-
-        // Initialize particles
-        function initParticles() {
-            for (let i = 0; i < numParticles; i++) {
-                particles.push(new Particle());
-            }
-        }
-
-        // Animation loop
-        function animate() {
-            requestAnimationFrame(animate);
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-
-            for (let i = 0; i < particles.length; i++) {
-                const p1 = particles[i];
-                p1.update();
-                p1.draw();
-
-                // Draw lines between nearby particles
-                for (let j = i + 1; j < particles.length; j++) {
-                    const p2 = particles[j];
-                    const distance = Math.hypot(p1.x - p2.x, p1.y - p2.y);
-
-                    if (distance < maxDistance) {
-                        ctx.beginPath();
-                        ctx.moveTo(p1.x, p1.y);
-                        ctx.lineTo(p2.x, p2.y);
-                        // Line alpha fades with distance
-                        ctx.strokeStyle = `rgba(180, 200, 255, ${1 - (distance / maxDistance) * 0.8})`;
-                        ctx.lineWidth = 0.5; // Thin lines
-                        ctx.stroke();
-                    }
-                }
-            }
-        }
-
-        // Event listeners for background
-        window.addEventListener('resize', resizeCanvas);
-        window.addEventListener('load', () => {
-            resizeCanvas(); // Initial resize and particle setup
-            animate();      // Start animation
-        });
-
-        // --- QuizApp Class and Logic (Existing, with minor adjustments) ---
         class QuizApp {
             constructor() {
                 this.currentTopic = null;
                 this.currentQuestionIndex = 0;
-                this.userAnswers = []; // Stores objects: { questionIndex: X, selectedAnswer: Y, isCorrect: true/false }
+                this.userAnswers = []; // Stores the index of the user's chosen option
                 this.score = 0;
                 this.timer = null;
-                this.timeLeft = 15; // Decreased timer to add more challenge
-                this.totalTime = 0;
-                this.startTime = null;
-                this.questionAnswered = false; // To prevent multiple answers per question
+                this.timeLeft = 30; // Time per question
+                this.totalTime = 0; // Total time taken for the quiz
+                this.startTime = null; // Timestamp when quiz started
 
+                // Hardcoded quiz data for different topics
                 this.quizData = {
                     space: {
                         title: "Space Exploration",
@@ -775,13 +620,19 @@
                 this.init();
             }
 
+            /**
+             * Initializes the QuizApp by binding event listeners and showing the topic selection screen.
+             */
             init() {
                 this.bindEvents();
                 this.showTopicSelection();
             }
 
+            /**
+             * Binds event listeners to various UI elements.
+             */
             bindEvents() {
-                // Topic selection
+                // Event listeners for topic selection cards
                 document.querySelectorAll('.topic-card').forEach(card => {
                     card.addEventListener('click', (e) => {
                         const topic = e.currentTarget.dataset.topic;
@@ -789,289 +640,389 @@
                     });
                 });
 
-                // Navigation buttons
+                // Event listeners for quiz navigation buttons
                 document.getElementById('nextBtn').addEventListener('click', () => this.nextQuestion());
                 document.getElementById('prevBtn').addEventListener('click', () => this.prevQuestion());
 
-                // Result buttons
+                // Event listeners for result screen buttons
                 document.getElementById('restartBtn').addEventListener('click', () => this.restartQuiz());
                 document.getElementById('newTopicBtn').addEventListener('click', () => this.showTopicSelection());
                 document.getElementById('reviewBtn').addEventListener('click', () => this.showReview());
                 document.getElementById('backToResultsBtn').addEventListener('click', () => this.showResults());
             }
 
+            /**
+             * Displays the topic selection screen and hides other screens.
+             */
             showTopicSelection() {
                 document.getElementById('topicSelection').classList.remove('hidden');
                 document.getElementById('quizInterface').classList.add('hidden');
                 document.getElementById('resultsScreen').classList.add('hidden');
                 document.getElementById('reviewScreen').classList.add('hidden');
-                this.stopTimer(); // Ensure timer is stopped if returning from quiz
+                // Ensure the question card is not flipped when returning to topic selection
+                document.getElementById('questionCard').classList.remove('flipped');
             }
 
+            /**
+             * Starts the quiz for the selected topic.
+             * @param {string} topic - The key for the selected quiz topic in quizData.
+             */
             startQuiz(topic) {
                 this.currentTopic = topic;
                 this.currentQuestionIndex = 0;
-                this.userAnswers = Array(this.quizData[topic].questions.length).fill(null); // Initialize user answers array
+                // Initialize user answers with null for each question
+                this.userAnswers = Array(this.quizData[topic].questions.length).fill(null); 
                 this.score = 0;
                 this.totalTime = 0;
-                this.startTime = Date.now();
-                this.questionAnswered = false;
+                this.startTime = Date.now(); // Record start time for overall quiz duration
                 
                 document.getElementById('topicSelection').classList.add('hidden');
                 document.getElementById('quizInterface').classList.remove('hidden');
                 
                 this.loadQuestion();
-                this.startTimer();
             }
 
-            startTimer() {
-                this.stopTimer(); // Clear any existing timer
-                this.timeLeft = 15; // Reset time for current question
-                document.getElementById('timeLeft').textContent = this.timeLeft;
-                document.getElementById('timer').classList.remove('timer-pulse');
-
-                this.timer = setInterval(() => {
-                    this.timeLeft--;
-                    document.getElementById('timeLeft').textContent = this.timeLeft;
-
-                    if (this.timeLeft <= 5 && this.timeLeft > 0) {
-                        document.getElementById('timer').classList.add('timer-pulse');
-                    } else if (this.timeLeft <= 0) {
-                        this.stopTimer();
-                        this.handleTimeUp();
-                    }
-                }, 1000);
-            }
-
-            stopTimer() {
-                clearInterval(this.timer);
-                document.getElementById('timer').classList.remove('timer-pulse');
-            }
-
-            handleTimeUp() {
-                if (!this.questionAnswered) { // Only mark incorrect if not answered
-                    this.recordAnswer(this.currentQuestionIndex, -1, false); // -1 to indicate no answer selected
-                }
-                this.nextQuestion();
-            }
-
+            /**
+             * Loads and displays the current question and its answer options.
+             */
             loadQuestion() {
-                this.questionAnswered = false;
-                this.stopTimer(); // Stop timer before loading new question
+                const quizTopic = this.quizData[this.currentTopic];
+                const question = quizTopic.questions[this.currentQuestionIndex];
+                const totalQuestions = quizTopic.questions.length;
+
+                // Stop any existing timer
+                this.stopTimer();
+
+                // Reset timer for the new question
+                this.timeLeft = 30;
+                this.updateTimerDisplay(); // Update display immediately
                 this.startTimer(); // Start timer for the new question
 
-                const quiz = this.quizData[this.currentTopic];
-                const question = quiz.questions[this.currentQuestionIndex];
-                
-                const questionCard = document.getElementById('questionCard');
-                questionCard.classList.remove('flipped'); // Ensure card is front-facing
+                // Update question counter and progress bar
+                document.getElementById('questionCounter').textContent = `Question ${this.currentQuestionIndex + 1} of ${totalQuestions}`;
+                document.getElementById('progressText').textContent = `${this.currentQuestionIndex + 1} / ${totalQuestions}`;
+                this.updateProgressBar();
 
-                // Update question content
-                document.getElementById('questionText').textContent = question.question;
-                document.getElementById('questionIcon').className = `w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-purple-500 to-pink-500 rounded-2xl flex items-center justify-center ${quiz.icon}`;
+                // Update question icon
+                const questionIconElement = document.getElementById('questionIcon');
+                questionIconElement.innerHTML = `<i class="${quizTopic.icon} text-white text-xl"></i>`;
+                // Add and remove bounce-in for icon animation
+                questionIconElement.classList.remove('bounce-in');
+                void questionIconElement.offsetWidth; // Trigger reflow
+                questionIconElement.classList.add('bounce-in');
 
+
+                // Update question text
+                const questionTextElement = document.getElementById('questionText');
+                questionTextElement.textContent = question.question;
+                questionTextElement.classList.remove('fade-in');
+                void questionTextElement.offsetWidth; // Trigger reflow
+                questionTextElement.classList.add('fade-in');
+
+
+                // Populate answer options
                 const answerOptionsDiv = document.getElementById('answerOptions');
                 answerOptionsDiv.innerHTML = ''; // Clear previous options
 
                 question.options.forEach((option, index) => {
-                    const label = document.createElement('label');
-                    label.className = 'answer-option-label flex items-center gap-4 text-left text-white';
-                    label.innerHTML = `
-                        <input type="radio" name="answer" value="${index}" class="custom-radio" data-index="${index}">
-                        <span>${option}</span>
-                    `;
-                    answerOptionsDiv.appendChild(label);
+                    const button = document.createElement('button');
+                    button.textContent = option;
+                    button.dataset.index = index;
+                    button.classList.add(
+                        'answer-option',
+                        'w-full', 'py-3', 'px-4', 'rounded-xl', 'text-white', 'font-medium',
+                        'text-left', 'transition-all', 'duration-200', 'ease-in-out',
+                        'focus:outline-none', 'focus:ring-2', 'focus:ring-offset-2',
+                        'bg-gray-800', 'hover:bg-blue-700', 'hover:border-blue-400', 'border', 'border-transparent',
+                        'shadow-md', 'slide-up' // Apply slide-up animation
+                    );
+                    button.style.animationDelay = `${index * 0.05}s`; // Stagger animation for options
 
-                    // Add event listener to each radio button
-                    const radio = label.querySelector('input[type="radio"]');
-                    radio.addEventListener('change', (e) => this.handleAnswerSelection(e));
-
-                    // If user has already answered this question, pre-select and show feedback
+                    // If user has already answered this question, show their selection and correct answer
                     if (this.userAnswers[this.currentQuestionIndex] !== null) {
-                        const savedAnswer = this.userAnswers[this.currentQuestionIndex];
-                        if (savedAnswer.selectedAnswer === index) {
-                            radio.checked = true;
+                        button.disabled = true; // Disable interaction
+                        if (index === question.correct) {
+                            button.classList.add('bg-green-600', 'border-green-400', 'hover:bg-green-600', 'focus:ring-green-400');
+                        } else if (index === this.userAnswers[this.currentQuestionIndex]) {
+                            button.classList.add('bg-red-600', 'border-red-400', 'hover:bg-red-600', 'focus:ring-red-400');
                         }
-                        this.applyFeedbackStyling(index, savedAnswer.isCorrect, question.correct, true);
+                    } else {
+                        // Attach event listener only if not already answered
+                        button.addEventListener('click', () => this.selectAnswer(index));
                     }
+                    answerOptionsDiv.appendChild(button);
                 });
 
+                // Update navigation button states
                 this.updateNavigationButtons();
-                this.updateProgressBar();
+
+                // Apply fade-in animation to the card's content
+                const questionCardFrontContent = document.querySelector('#questionCard .flip-card-front');
+                questionCardFrontContent.classList.remove('fade-in');
+                void questionCardFrontContent.offsetWidth; // Trigger reflow
+                questionCardFrontContent.classList.add('fade-in');
             }
 
-            handleAnswerSelection(event) {
-                if (this.questionAnswered) return; // Prevent changing answer after submission
+            /**
+             * Handles user answer selection.
+             * @param {number} selectedIndex - The index of the option selected by the user.
+             */
+            selectAnswer(selectedIndex) {
+                const question = this.quizData[this.currentTopic].questions[this.currentQuestionIndex];
+                
+                // Only record answer if not already answered or if it's a timeout
+                if (this.userAnswers[this.currentQuestionIndex] === null) {
+                    this.userAnswers[this.currentQuestionIndex] = selectedIndex; // Store user's answer
+                    this.stopTimer(); // Stop the timer once an answer is selected
 
-                const selectedAnswerIndex = parseInt(event.target.value);
-                const currentQuestion = this.quizData[this.currentTopic].questions[this.currentQuestionIndex];
-                const isCorrect = selectedAnswerIndex === currentQuestion.correct;
+                    const options = document.getElementById('answerOptions').children;
+                    
+                    // Disable all options and provide feedback
+                    for (let i = 0; i < options.length; i++) {
+                        const optionButton = options[i];
+                        optionButton.disabled = true; // Disable further clicks
 
-                this.recordAnswer(this.currentQuestionIndex, selectedAnswerIndex, isCorrect);
-                this.questionAnswered = true; // Mark question as answered
+                        // Remove generic hover styles
+                        optionButton.classList.remove('hover:bg-blue-700', 'hover:border-blue-400');
 
-                // Apply immediate visual feedback
-                this.applyFeedbackStyling(selectedAnswerIndex, isCorrect, currentQuestion.correct, false);
-
-                // Add score tally animation
-                if (isCorrect) {
-                    this.score++;
-                    // Optional: You could add a specific element to animate, e.g., a checkmark pop-up
-                }
-
-                this.stopTimer(); // Stop timer immediately after answer
-            }
-
-            recordAnswer(questionIndex, selectedAnswer, isCorrect) {
-                this.userAnswers[questionIndex] = {
-                    questionIndex: questionIndex,
-                    selectedAnswer: selectedAnswer,
-                    isCorrect: isCorrect,
-                    timeTaken: 15 - this.timeLeft // Time taken for this question
-                };
-            }
-
-            applyFeedbackStyling(selectedAnswerIndex, isCorrect, correctAnswerIndex, isReviewMode) {
-                const answerOptions = document.querySelectorAll('#answerOptions .answer-option-label');
-                answerOptions.forEach((label, index) => {
-                    const radio = label.querySelector('input[type="radio"]');
-                    radio.disabled = true; // Disable all radio buttons after selection
-
-                    label.classList.remove('selected-correct', 'selected-incorrect', 'correct', 'incorrect');
-
-                    if (index === correctAnswerIndex) {
-                        label.classList.add('correct');
-                        if (isReviewMode && selectedAnswerIndex === correctAnswerIndex) {
-                            label.classList.add('selected-correct');
-                        }
-                    } else if (index === selectedAnswerIndex) {
-                        label.classList.add('incorrect');
-                        if (isReviewMode && selectedAnswerIndex !== correctAnswerIndex) {
-                            label.classList.add('selected-incorrect');
+                        if (i === question.correct) {
+                            optionButton.classList.add('bg-green-600', 'border-green-400', 'pulse-correct');
+                        } else if (i === selectedIndex) {
+                            optionButton.classList.add('bg-red-600', 'border-red-400', 'pulse-incorrect');
+                        } else {
+                            // Dim incorrect, unselected answers
+                            optionButton.classList.add('opacity-50');
                         }
                     }
-                });
 
-                if (!isReviewMode && isCorrect) {
-                    // console.log("Correct answer! Pulse animation.");
-                    // document.getElementById('questionCard').querySelector('.glass').classList.add('pulse-correct');
-                } else if (!isReviewMode && !isCorrect) {
-                    // console.log("Incorrect answer! Pulse animation.");
-                    // document.getElementById('questionCard').querySelector('.glass').classList.add('pulse-incorrect');
+                    // Check if the answer is correct and update score
+                    if (selectedIndex === question.correct) {
+                        this.score++;
+                    }
+
+                    // Calculate time taken for this question and add to total
+                    const timeTakenForQuestion = 30 - this.timeLeft; // If user answers quickly
+                    this.totalTime += Math.max(0, timeTakenForQuestion); // Ensure time added is non-negative
                 }
-            }
-
-            nextQuestion() {
-                const quizLength = this.quizData[this.currentTopic].questions.length;
                 
-                // If not answered, record as incorrect (timed out)
-                if (!this.questionAnswered && this.userAnswers[this.currentQuestionIndex] === null) {
-                    this.recordAnswer(this.currentQuestionIndex, -1, false); // -1 for unanswered
-                }
+                // Update navigation button states immediately after answer selection
+                this.updateNavigationButtons(); 
+            }
 
-                if (this.currentQuestionIndex < quizLength - 1) {
-                    this.currentQuestionIndex++;
-                    this.animateQuestionChange(() => this.loadQuestion());
+            /**
+             * Updates the width of the progress bar and the progress text.
+             */
+            updateProgressBar() {
+                const totalQuestions = this.quizData[this.currentTopic].questions.length;
+                const progressPercentage = ((this.currentQuestionIndex + 1) / totalQuestions) * 100;
+                document.getElementById('progressBar').style.width = `${progressPercentage}%`;
+            }
+
+            /**
+             * Navigates to the next question or shows results if at the end.
+             */
+            nextQuestion() {
+                // If the current question hasn't been answered (e.g., timer ran out and auto-advanced),
+                // we still proceed. The 'Next' button is disabled until an answer is selected for current question.
+                // So, this function is only called when an answer is already selected or time runs out.
+                
+                this.currentQuestionIndex++;
+                const totalQuestions = this.quizData[this.currentTopic].questions.length;
+
+                if (this.currentQuestionIndex < totalQuestions) {
+                    this.loadQuestion();
                 } else {
-                    this.endQuiz();
+                    this.showResults();
                 }
             }
 
+            /**
+             * Navigates to the previous question.
+             */
             prevQuestion() {
                 if (this.currentQuestionIndex > 0) {
                     this.currentQuestionIndex--;
-                    this.animateQuestionChange(() => this.loadQuestion());
+                    this.loadQuestion();
                 }
             }
 
-            animateQuestionChange(callback) {
-                const questionCard = document.getElementById('questionCard');
-                questionCard.classList.add('flipped'); // Start flip animation
-
-                // Listen for when the flip animation is half-way
-                setTimeout(() => {
-                    callback(); // Load new content
-                    questionCard.classList.remove('flipped'); // Reset for next flip
-                }, 300); // Half of the 0.6s transition time
-            }
-
+            /**
+             * Updates the state of the navigation buttons (Previous/Next).
+             * The 'Next' button is enabled only after an answer is selected for the current question.
+             */
             updateNavigationButtons() {
-                const quizLength = this.quizData[this.currentTopic].questions.length;
+                const totalQuestions = this.quizData[this.currentTopic].questions.length;
                 document.getElementById('prevBtn').disabled = this.currentQuestionIndex === 0;
-                document.getElementById('nextBtn').textContent = this.currentQuestionIndex === quizLength - 1 ? 'Finish Quiz' : 'Next';
-                document.getElementById('nextBtn').innerHTML = this.currentQuestionIndex === quizLength - 1 ? '<i class="fas fa-flag-checkered mr-2"></i>Finish Quiz' : 'Next<i class="fas fa-chevron-right ml-2"></i>';
-
-                document.getElementById('questionCounter').textContent = `Question ${this.currentQuestionIndex + 1} of ${quizLength}`;
+                // Enable next button only if an answer has been recorded for the current question
+                document.getElementById('nextBtn').disabled = this.userAnswers[this.currentQuestionIndex] === null;
             }
 
-            updateProgressBar() {
-                const quizLength = this.quizData[this.currentTopic].questions.length;
-                const progress = ((this.currentQuestionIndex + 1) / quizLength) * 100;
-                document.getElementById('progressBar').style.width = `${progress}%`;
-                document.getElementById('progressText').textContent = `${this.currentQuestionIndex + 1} / ${quizLength}`;
+            /**
+             * Starts the countdown timer for the current question.
+             */
+            startTimer() {
+                this.stopTimer(); // Clear any existing timer
+                this.timeLeft = 30; // Reset time for current question
+                this.updateTimerDisplay(); // Update display immediately
+                document.getElementById('timer').classList.remove('timer-pulse'); // Remove pulse if active
+
+                this.timer = setInterval(() => {
+                    this.timeLeft--;
+                    this.updateTimerDisplay();
+
+                    if (this.timeLeft <= 10 && this.timeLeft > 0) {
+                        document.getElementById('timer').classList.add('timer-pulse'); // Add pulse animation when low on time
+                    } else if (this.timeLeft <= 0) {
+                        this.stopTimer();
+                        this.selectAnswer(-1); // Mark as unanswered/timed out (-1 indicates no answer)
+                        // Auto-advance after a brief delay so user can see the answer feedback
+                        setTimeout(() => this.nextQuestion(), 1000); 
+                    }
+                }, 1000);
             }
 
-            endQuiz() {
-                this.stopTimer();
-                this.totalTime = Math.floor((Date.now() - this.startTime) / 1000); // Calculate total time in seconds
+            /**
+             * Stops the current countdown timer.
+             */
+            stopTimer() {
+                if (this.timer) {
+                    clearInterval(this.timer);
+                    this.timer = null;
+                    document.getElementById('timer').classList.remove('timer-pulse');
+                }
+            }
 
+            /**
+             * Updates the timer display in the UI.
+             */
+            updateTimerDisplay() {
+                document.getElementById('timeLeft').textContent = this.timeLeft;
+            }
+
+            /**
+             * Displays the final results screen after the quiz is complete.
+             */
+            showResults() {
+                this.stopTimer(); // Ensure timer is stopped
                 document.getElementById('quizInterface').classList.add('hidden');
+                document.getElementById('reviewScreen').classList.add('hidden');
                 document.getElementById('resultsScreen').classList.remove('hidden');
 
                 const totalQuestions = this.quizData[this.currentTopic].questions.length;
-                const percentage = (this.score / totalQuestions) * 100;
+                const percentage = totalQuestions > 0 ? ((this.score / totalQuestions) * 100).toFixed(0) : 0;
+                const endTime = Date.now();
+                const quizDuration = Math.round((endTime - this.startTime) / 1000); // Total time in seconds
 
                 document.getElementById('finalScore').textContent = `${this.score} / ${totalQuestions}`;
-                document.getElementById('finalPercentage').textContent = `${percentage.toFixed(0)}%`;
-                document.getElementById('finalTime').textContent = `${this.totalTime}s`;
-
-                // Add bounce-in animation to results screen
-                document.getElementById('resultsScreen').classList.add('bounce-in');
+                document.getElementById('finalPercentage').textContent = `${percentage}%`;
+                document.getElementById('finalTime').textContent = `${quizDuration}s`;
             }
 
-            restartQuiz() {
-                // Remove bounce-in before restarting to ensure it plays again
-                document.getElementById('resultsScreen').classList.remove('bounce-in'); 
-                this.startQuiz(this.currentTopic);
+            /**
+             * Calls the Gemini API to get a deeper explanation for a question.
+             * @param {string} questionText - The question text.
+             * @param {string} currentExplanation - The existing explanation.
+             * @param {HTMLElement} targetElement - The element to update with the new explanation.
+             * @param {HTMLElement} buttonElement - The button that triggered the call.
+             */
+            async getDeeperExplanation(questionText, currentExplanation, targetElement, buttonElement) {
+                // Disable the button and show a loading spinner
+                buttonElement.disabled = true;
+                buttonElement.innerHTML = '<div class="loader"></div> Generating...';
+
+                const prompt = `Given the quiz question: "${questionText}" and its brief explanation: "${currentExplanation}", provide a more detailed and engaging explanation suitable for a curious learner. Focus on expanding on the key concepts and providing additional context or interesting facts. Keep the response concise but informative, aiming for around 2-3 paragraphs.`;
+
+                try {
+                    let chatHistory = [];
+                    chatHistory.push({ role: "user", parts: [{ text: prompt }] });
+                    const payload = { contents: chatHistory };
+                    const apiKey = ""; // Leave as empty string, Canvas will provide at runtime.
+                    const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+
+                    const response = await fetch(apiUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    const result = await response.json();
+                    if (result.candidates && result.candidates.length > 0 &&
+                        result.candidates[0].content && result.candidates[0].content.parts &&
+                        result.candidates[0].content.parts.length > 0) {
+                        const newExplanation = result.candidates[0].content.parts[0].text;
+                        targetElement.innerHTML = `<strong class="text-cyan-400">Deeper Explanation:</strong> ${newExplanation}`;
+                        buttonElement.remove(); // Remove button after explanation is generated
+                    } else {
+                        targetElement.innerHTML = `<strong class="text-red-400">Error:</strong> Could not generate deeper explanation.`;
+                        buttonElement.innerHTML = '<i class="fas fa-magic mr-2"></i>Get Deeper Explanation ✨';
+                        buttonElement.disabled = false;
+                    }
+                } catch (error) {
+                    console.error("Error calling Gemini API:", error);
+                    targetElement.innerHTML = `<strong class="text-red-400">Error:</strong> Failed to connect to explanation service.`;
+                    buttonElement.innerHTML = '<i class="fas fa-magic mr-2"></i>Get Deeper Explanation ✨';
+                    buttonElement.disabled = false;
+                }
             }
 
+            /**
+             * Displays the review screen, showing all questions with user's answers and correct answers.
+             */
             showReview() {
                 document.getElementById('resultsScreen').classList.add('hidden');
+                document.getElementById('quizInterface').classList.add('hidden');
                 document.getElementById('reviewScreen').classList.remove('hidden');
-                this.populateReviewContent();
-            }
 
-            populateReviewContent() {
                 const reviewContentDiv = document.getElementById('reviewContent');
-                reviewContentDiv.innerHTML = ''; // Clear previous review content
-                
-                const questions = this.quizData[this.currentTopic].questions;
+                reviewContentDiv.innerHTML = ''; // Clear previous content
 
-                this.userAnswers.forEach((userAnswer, index) => {
-                    const question = questions[index];
-                    const isCorrect = userAnswer ? userAnswer.isCorrect : false; // Handle unanswered
-                    const selectedOptionText = userAnswer && userAnswer.selectedAnswer !== -1 ? question.options[userAnswer.selectedAnswer] : "No answer";
-                    const correctOptionText = question.options[question.correct];
+                this.quizData[this.currentTopic].questions.forEach((q, index) => {
+                    const userAnswerIndex = this.userAnswers[index];
+                    const userAnswerText = userAnswerIndex !== null && userAnswerIndex !== -1
+                        ? q.options[userAnswerIndex]
+                        : "No answer / Timed out";
+                    const correctAnswerText = q.options[q.correct];
+                    const isCorrect = (userAnswerIndex === q.correct);
 
-                    const reviewItem = document.createElement('div');
-                    reviewItem.className = `glass border rounded-2xl p-6 fade-in ${isCorrect ? 'border-green-400/50' : 'border-red-400/50'}`;
-                    
-                    reviewItem.innerHTML = `
-                        <h3 class="text-lg font-bold text-white mb-2">Q${index + 1}: ${question.question}</h3>
-                        <p class="text-gray-300 mb-1">Your Answer: <span class="${isCorrect ? 'text-green-300' : 'text-red-300'} font-semibold">${selectedOptionText} ${userAnswer && userAnswer.selectedAnswer === -1 ? '(Unanswered)' : ''}</span></p>
-                        <p class="text-gray-300 mb-3">Correct Answer: <span class="text-green-300 font-semibold">${correctOptionText}</span></p>
-                        <p class="text-gray-400 text-sm">Explanation: ${question.explanation}</p>
+                    const reviewCard = document.createElement('div');
+                    reviewCard.classList.add(
+                        'glass', 'border', 'rounded-xl', 'p-6', 'fade-in', 'slide-up',
+                        isCorrect ? 'border-green-400/50' : 'border-red-400/50'
+                    );
+
+                    reviewCard.innerHTML = `
+                        <p class="text-gray-300 text-sm mb-2">Question ${index + 1}</p>
+                        <h3 class="font-bold text-white mb-4">${q.question}</h3>
+                        <p class="text-gray-200 mb-2">Your Answer: <span class="font-medium ${isCorrect ? 'text-green-300' : 'text-red-300'}">${userAnswerText} ${isCorrect ? '<i class="fas fa-check-circle ml-1"></i>' : '<i class="fas fa-times-circle ml-1"></i>'}</span></p>
+                        <p class="text-gray-200 mb-4">Correct Answer: <span class="font-medium text-green-300">${correctAnswerText}</span></p>
+                        <div class="p-3 bg-gray-800 rounded-lg text-gray-300 text-sm mb-4" id="explanation-${index}">
+                            <strong class="text-cyan-400">Explanation:</strong> ${q.explanation}
+                        </div>
+                        <button id="deeperExplanationBtn-${index}" class="px-4 py-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:shadow-xl text-white rounded-xl transition-all shadow-md text-sm">
+                            <i class="fas fa-magic mr-2"></i>Get Deeper Explanation ✨
+                        </button>
                     `;
-                    reviewContentDiv.appendChild(reviewItem);
+                    reviewContentDiv.appendChild(reviewCard);
+
+                    // Add event listener for the "Get Deeper Explanation" button
+                    const deeperExplanationBtn = document.getElementById(`deeperExplanationBtn-${index}`);
+                    const explanationDiv = document.getElementById(`explanation-${index}`);
+                    deeperExplanationBtn.addEventListener('click', () => 
+                        this.getDeeperExplanation(q.question, q.explanation, explanationDiv, deeperExplanationBtn)
+                    );
                 });
             }
 
-            showResults() {
-                document.getElementById('reviewScreen').classList.add('hidden');
-                document.getElementById('resultsScreen').classList.remove('hidden');
+            /**
+             * Resets the quiz to the first question of the current topic.
+             */
+            restartQuiz() {
+                this.stopTimer();
+                this.startQuiz(this.currentTopic); // Re-start quiz for the same topic
             }
         }
 
+        // Initialize the quiz app when the DOM is fully loaded
         document.addEventListener('DOMContentLoaded', () => {
             new QuizApp();
         });
