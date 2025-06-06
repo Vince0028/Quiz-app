@@ -322,9 +322,11 @@
             <!-- Question Card -->
             <div class="flip-card mb-8" id="questionCard">
                 <div class="flip-card-inner">
-                    <div class="flip-card-front glass rounded-2xl">
+                    <!-- Changed: Removed 'glass' from flip-card-front directly.
+                                  The main card container (parent of flip-card-inner) will have the glass effect. -->
+                    <div class="flip-card-front flex flex-col justify-between items-center w-full h-full p-8"> 
                         <!-- Content of the front face -->
-                        <div class="flex-grow flex flex-col justify-center items-center text-center">
+                        <div class="flex-grow flex flex-col justify-center items-center text-center w-full">
                             <h2 class="question-text text-xl md:text-2xl font-bold text-white mb-6" id="questionText">
                                 Loading question...
                             </h2>
